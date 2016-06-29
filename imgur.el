@@ -23,7 +23,6 @@
 
 ;;; Code:
 
-(require 'cl)
 (require 'json)
 
 (defconst imgur-client-id "f4a2d25e9bd3ed7"
