@@ -36,13 +36,7 @@ If called interactively, copy the resulting URL to the kill ring.
 If DATAP in non-nil, IMAGE should be a binary string containing
 the image.  If not, it should be a file name."
   (interactive "fImage to upload to imgur: ")
-  (let* ((image (if datap
-		    image
-		  (with-temp-buffer
-		    (set-buffer-multibyte nil)
-		    (insert-file-contents image)
-		    (buffer-string))))
-	 (url-request-method "POST")
+  (let* ((url-request-method "POST")
 	 (url-request-extra-headers
 	  `(("Content-Type" . "application/x-www-form-urlencoded")
 	    ("Authorization" . ,(concat "Client-ID " imgur-client-id))))
@@ -50,7 +44,9 @@ the image.  If not, it should be a file name."
 	  (mm-url-encode-www-form-urlencoded
 	   `(("image" . ,(with-temp-buffer
 			   (set-buffer-multibyte nil)
-			   (insert image)
+			   (if datap
+			       (insert image)
+			     (insert-file-contents image))
 			   (base64-encode-region (point-min) (point-max))
 			   (buffer-string))))))
 	 (result (url-retrieve-synchronously
