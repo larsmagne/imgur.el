@@ -2,7 +2,7 @@
 ;; Copyright (C) 2016 Lars Magne Ingebrigtsen
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
-;; Keywords: fun
+;; Keywords: fun, network
 
 ;; imgur.el is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
