@@ -43,7 +43,6 @@ the image.  If not, it should be a file name."
 		    (set-buffer-multibyte nil)
 		    (insert-file-contents image)
 		    (buffer-string))))
-	 (boundary (mml-compute-boundary '()))
 	 (url-request-method "POST")
 	 (url-request-extra-headers
 	  `(("Content-Type" . "application/x-www-form-urlencoded")
