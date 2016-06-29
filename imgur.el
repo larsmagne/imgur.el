@@ -32,8 +32,10 @@ It can only be used for anonymous uploads.")
 
 (defun imgur-upload-image (image &optional datap)
   "Upload IMAGE to imgur and return the resulting imgur URL.
-If DATAP, IMAGE should be a binary string containing the image.
-If not, it should be a file name."
+If called interactively, copy the resulting URL to the kill ring.
+
+If DATAP in non-nil, IMAGE should be a binary string containing
+the image.  If not, it should be a file name."
   (interactive "fImage to upload to imgur: ")
   (let* ((image (if datap
 		    image
@@ -63,7 +65,13 @@ If not, it should be a file name."
       (when (re-search-forward "\n\n" nil t)
 	(setq json (json-read)))
       (kill-buffer (current-buffer)))
-    (cdr (assq 'link (car json)))))
+    (let ((url (cdr (assq 'link (car json)))))
+      (if (not (called-interactively-p 'interactive))
+	  url
+	(message "Copied '%s' to the kill ring" url)
+	(with-temp-buffer
+	  (insert (url-encode-url url))
+	  (copy-region-as-kill (point-min) (point-max)))))))
 
 (provide 'imgur)
 
