@@ -2,7 +2,7 @@
 ;; Copyright (C) 2016 Lars Magne Ingebrigtsen
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
-;; Keywords: fun, network
+;; Keywords: fun
 
 ;; imgur.el is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'cl)
 (require 'json)
 (require 'mm-url)
 
@@ -30,14 +31,22 @@
   "This is the imgur client ID for the imgur.el library.
 It can only be used for anonymous uploads.")
 
-(defun imgur-upload-image (image &optional datap)
+(defun imgur-upload-image (image &optional datap kill)
   "Upload IMAGE to imgur and return the resulting imgur URL.
 If called interactively, copy the resulting URL to the kill ring.
 
 If DATAP in non-nil, IMAGE should be a binary string containing
-the image.  If not, it should be a file name."
+the image.  If not, it should be a file name.
+
+If KILL, copy the resulting url to the kill ring."
   (interactive "fImage to upload to imgur: ")
-  (let* ((url-request-method "POST")
+  (let* ((image (if datap
+		    image
+		  (with-temp-buffer
+		    (set-buffer-multibyte nil)
+		    (insert-file-contents image)
+		    (buffer-string))))
+	 (url-request-method "POST")
 	 (url-request-extra-headers
 	  `(("Content-Type" . "application/x-www-form-urlencoded")
 	    ("Authorization" . ,(concat "Client-ID " imgur-client-id))))
@@ -45,9 +54,7 @@ the image.  If not, it should be a file name."
 	  (mm-url-encode-www-form-urlencoded
 	   `(("image" . ,(with-temp-buffer
 			   (set-buffer-multibyte nil)
-			   (if datap
-			       (insert image)
-			     (insert-file-contents image))
+			   (insert image)
 			   (base64-encode-region (point-min) (point-max))
 			   (buffer-string))))))
 	 (result (url-retrieve-synchronously
@@ -61,12 +68,40 @@ the image.  If not, it should be a file name."
 	(setq json (json-read)))
       (kill-buffer (current-buffer)))
     (let ((url (cdr (assq 'link (car json)))))
-      (if (not (called-interactively-p 'interactive))
-	  url
+      ;; Apparently the URL returned doesn't quite work for everybody
+      ;; unless we chop off the ending?  Weird.
+      (setq url (replace-regexp-in-string "[.]\\(jpg\\|png\\)\\'" "" url))
+      (when (or (called-interactively-p 'interactive)
+		kill)
 	(message "Copied '%s' to the kill ring" url)
 	(with-temp-buffer
 	  (insert (url-encode-url url))
-	  (copy-region-as-kill (point-min) (point-max)))))))
+	  (copy-region-as-kill (point-min) (point-max))))
+      url)))
+
+(defun imgur-screenshot (delay)
+  "Take a screenshot and upload to imgur.
+DELAY (the numeric prefix) says how many seconds to wait before
+starting the screenshotting process."
+  (interactive "p")
+  (unless (executable-find "import")
+    (error "Can't find the ImageMagick import command on this system"))
+  (decf delay)
+  (unless (zerop delay)
+    (dotimes (i delay)
+      (message "Sleeping %d second%s..."
+	       (- delay i)
+	       (if (= (- delay i) 1)
+		   ""
+		 "s"))
+      (sleep-for 1)))
+  (message "Take screenshot")
+  (imgur-upload-image
+   (with-temp-buffer
+     (set-buffer-multibyte nil)
+     (call-process "import" nil (current-buffer) nil "png:-")
+     (buffer-string))
+   t t))
 
 (provide 'imgur)
 
