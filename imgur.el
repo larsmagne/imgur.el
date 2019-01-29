@@ -68,9 +68,6 @@ If KILL, copy the resulting url to the kill ring."
 	(setq json (json-read)))
       (kill-buffer (current-buffer)))
     (let ((url (cdr (assq 'link (car json)))))
-      ;; Apparently the URL returned doesn't quite work for everybody
-      ;; unless we chop off the ending?  Weird.
-      (setq url (replace-regexp-in-string "[.]\\(jpg\\|png\\)\\'" "" url))
       (when (or (called-interactively-p 'interactive)
 		kill)
 	(message "Copied '%s' to the kill ring" url)
