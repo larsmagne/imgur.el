@@ -104,10 +104,12 @@ starting the screenshotting process."
   "Take a screenshot and save to a file.
 DELAY (the numeric prefix) says how many seconds to wait before
 starting the screenshotting process."
-  (interactive "p")
+  (interactive "P")
   (unless (executable-find "import")
     (error "Can't find the ImageMagick import command on this system"))
-  (decf delay)
+  (if (not delay)
+      (setq delay 5)
+    (setq delay (prefix-numeric-value delay)))
   (unless (zerop delay)
     (dotimes (i delay)
       (message "Sleeping %d second%s..."
