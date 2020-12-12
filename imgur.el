@@ -23,7 +23,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 (require 'json)
 (require 'mm-url)
 
@@ -83,7 +83,7 @@ starting the screenshotting process."
   (interactive "p")
   (unless (executable-find "import")
     (error "Can't find the ImageMagick import command on this system"))
-  (decf delay)
+  (cl-decf delay)
   (unless (zerop delay)
     (dotimes (i delay)
       (message "Sleeping %d second%s..."
