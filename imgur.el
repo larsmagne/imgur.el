@@ -100,30 +100,6 @@ starting the screenshotting process."
      (buffer-string))
    t t))
 
-(defun imgur-screenshot-save (delay)
-  "Take a screenshot and save to a file.
-DELAY (the numeric prefix) says how many seconds to wait before
-starting the screenshotting process."
-  (interactive "P")
-  (unless (executable-find "import")
-    (error "Can't find the ImageMagick import command on this system"))
-  (if (not delay)
-      (setq delay 5)
-    (setq delay (prefix-numeric-value delay)))
-  (unless (zerop delay)
-    (dotimes (i delay)
-      (message "Sleeping %d second%s..."
-	       (- delay i)
-	       (if (= (- delay i) 1)
-		   ""
-		 "s"))
-      (sleep-for 1)))
-  (message "Take screenshot")
-  (let ((file (make-temp-file "screen" nil ".jpg")))
-    (call-process "import" nil (current-buffer) nil file)
-    (kill-new file)
-    (message "Copied %s" file)))
-
 (provide 'imgur)
 
 ;;; imgur.el ends here
